@@ -53,6 +53,13 @@ let rec make_when f v ws =
 %token LBRACKET RBRACKET
 %token DOT_DOT
 %token DOT
+%token PLUS
+%token MINUS
+%token MULTI
+%token PARG
+%token PARD
+%token DIVIDE
+%token MODULO
 
 /* values */
 %token <string> ID
@@ -98,18 +105,21 @@ field:
 opt_statements:
 	/* empty */
 		{ NOP }
-|	statement
+|	statement opt_statements
 		{ $1 }
 ;
 
 
 statement:
-	cell ASSIGN expression
+	cell ASSIGN E
 		{
 			if (fst $1) != 0 then error "assigned x must be 0";
 			if (snd $1) != 0 then error "assigned Y must be 0";
 			SET_CELL (0, $3)
 		}
+  | ID ASSIGN E
+    {NOP}
+
 ;
 
 
@@ -122,12 +132,32 @@ cell:
 		}
 ;
 
-expression:
-	cell
-		{ CELL (0, fst $1, snd $1) }
-|	INT
-		{ CST $1 }
+E:
+  T
+  {NONE}
+| E PLUS T
+  {NONE; (printf "+\n")}
+| E MINUS T
+  {NONE}
 ;
 
+T:
+expression
+  {NONE}
+|T MULTI expression
+  {NONE}
+|T DIVIDE expression
+  {NONE}
+;
 
-
+expression:
+	cell
+		{ CELL (0, fst $1, snd $1);
+      (printf "[%d,%d]\n" (fst $1)(snd $1))}
+|	INT
+		{ CST $1;(printf "%d\n" $1) }
+| ID
+    {(printf "%s\n" $1)}
+| PARG E PARD
+  {NONE}
+;
