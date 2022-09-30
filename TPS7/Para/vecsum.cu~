@@ -1,0 +1,22 @@
+#define BSIZE 1024
+void vecsum (float *A, float *B, float *C, int n){
+     int bytes = n * sizeof(float);
+     int gsize = ((n+BSIZE-1)/BSIZE);
+
+     float *dA, *dB, *dC;
+     cudaMalloc((void **) &dA, bytes);
+     cuda Memcpy(dA, A, bytes, cudaMemcpyHostToDevice);
+     cudaMalloc((void **) &dB, bytes);
+     cuda Memcpy(dB, B, bytes, cudaMemcpyHostToDevice);
+     cudaMalloc((void **) &dC, bytes);
+
+     vecsumKernel <<< gsize, BSIZE >>> (dA, dB, dC, n);
+     cudaMemcpy(C, dC, bytes, cudaMemcpyDeviceToHost);
+     cudaFree(dA); cudaFree(dB); cudaFree(dC);
+
+}
+
+--global void vecsumKernel(dA, dB, dC, n){
+	 i=BlockIdx.x * BlockDimx + ThreadIdx.x;
+	 if (i<n) dC[i] = dA[i] + dB[i];
+}
