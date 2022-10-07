@@ -1,4 +1,6 @@
-#include <cstdlib>
+
+
+  #include <cstdlib>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -6,27 +8,41 @@
 #include <assert.h>    //taille<2^20
 
 
-__global__ void vecsumKernel(unsigned int *dVec, int size){
-  printf("kerneled\n");
-	int taille=blockDim.x/2;
+__global__ void vecsumKernel(unsigned int *dVec, unsigned int *dSum, int size){
+	int taille=1023/2;
+	int bid = blockIdx.x;
 	int id = blockIdx.x*blockDim.x+threadIdx.x;
-
-	while(taille>=1 && id<=taille){
+	int tid = threadIdx.x;
+		if(id<size){
+	while(taille>=1&& tid <= taille){
+		dVec[tid]+=dVec[taille+tid];
+    taille/=2;
+    __syncthreads();
+    }
+    if(tid==0){
+        dSum[bid]=dVec[blockIdx.x*blockDim.x];
+    }
+		
+	while(taille>=1 && id <= taille){
 		dVec[id] += dVec[taille+id];
 		taille = taille / 2;
 		__syncthreads();
 	}
-  
+    }
 }
 
 void vecsum (unsigned int *vec, unsigned int *sum, int size){
+     int bsize = 1024;
      int bytes = size * sizeof(unsigned int);
+     int gsize = (size+bsize-1)/bsize;
      unsigned int *dVec;
-     printf("size: %i\n", size);
+     unsigned int *dSum;
+     printf("size: %i\n", gsize);
      cudaMalloc((void **) &dVec, bytes);
+     cudaMalloc((void **) &dSum, gsize);
      cudaMemcpy(dVec, vec, bytes, cudaMemcpyHostToDevice);
-     vecsumKernel <<< 1, size >>> (dVec, size);
-     cudaMemcpy(sum, dVec, sizeof(unsigned int), cudaMemcpyDeviceToHost);
+     vecsumKernel <<< gsize, bsize >>> (dVec, dSum, size);
+     cudaMemcpy(sum, dSum, sizeof(unsigned int), cudaMemcpyDeviceToHost);
      cudaFree(dVec);
 }
 
