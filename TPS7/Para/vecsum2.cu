@@ -1,6 +1,4 @@
-
-
-  #include <cstdlib>
+#include <cstdlib>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -10,6 +8,7 @@
 
 __global__ void vecsumKernel(unsigned int *dVec, unsigned int *dSum, int size){
 	int taille=1023/2;
+
 	int bid = blockIdx.x;
 	int id = blockIdx.x*blockDim.x+threadIdx.x;
 	int tid = threadIdx.x;
@@ -33,17 +32,16 @@ __global__ void vecsumKernel(unsigned int *dVec, unsigned int *dSum, int size){
 
 void vecsum (unsigned int *vec, unsigned int *sum, int size){
      int bsize = 1024;
-     int bytes = size * sizeof(unsigned int);
      int gsize = (size+bsize-1)/bsize;
-     unsigned int *dVec;
-     unsigned int *dSum;
-     printf("size: %i\n", gsize);
+     int bytes = size * sizeof(unsigned int);
+     unsigned int *dVec, *dSum;
+     printf("gsize: %i\n", gsize);
      cudaMalloc((void **) &dVec, bytes);
-     cudaMalloc((void **) &dSum, gsize);
+     cudaMalloc((void **) &dSum, gsize*sizeof(unsigned int));
      cudaMemcpy(dVec, vec, bytes, cudaMemcpyHostToDevice);
-     vecsumKernel <<< gsize, bsize >>> (dVec, dSum, size);
+     vecsumKernel <<< 1, size >>> (dVec, dSum, size);
      cudaMemcpy(sum, dSum, sizeof(unsigned int), cudaMemcpyDeviceToHost);
-     cudaFree(dVec);
+     cudaFree(dVec); cudaFree(dSum);
 }
 
 
