@@ -4,12 +4,8 @@ import random
 import math
 import numpy as np
 import matplotlib.image as mpimg
-from scipy import misc
-import matplotlib.pyplot as plt
-import matplotlib.cm as cmdef 
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
+import matplotlib.pyplot as plt 
+import matplotlib.cm as cm
 
 M = 255
 
@@ -68,35 +64,25 @@ def saveImage(newP, nblines, nbcolumns):
 	plt.show()
 	mpimg.imsave('image-grey2-stretched.png', newimg, cmap = cm.Greys_r )
 
-if rank == 0:
-	# load the image
-	print("Starting stretching...")
-	pixels, nblines, nbcolumns = readImage()
-	ptg = split(pixels, size)
-else :
-	pixels, ptg = None, None
+print("Starting stretching...")
 
-pixelLoc = comm.scatter(ptg, root = 0)
+# load the image
+pixels, nblines, nbcolumns = readImage()
+
 # compute min and max of pixels
-pix_minL = min(pixelLoc)
-pix_maxL = max(pixelLoc)
-pix_min = comm.allreduce(pix_minL, op = MPI.MIN)
-pix_max = comm.allreduce(pix_maxL, op = MPI.MAX)
+pix_min = min(pixels)
+pix_max = max(pixels)
+
 # compute alpha, the parameter for f_* functions
 alpha = 1+(pix_max - pix_min) / M
 
-if rank%2 == 0:
-    for i in range(0,len(pixelLoc)):
-    	pixelLoc[i] = f_one(pixelLoc[i], alpha)
-else:
-    for i in range(0,len(pixelLoc)):
-        pixelLoc[i] = f_two(pixelLoc[i], alpha)
+# stretch contrast for all pixels. f_one and f_two are the two different methods
+for i in range(0,len(pixels)):
+	pixels[i] = f_one(pixels[i], alpha)
+	#pixels[i] = f_two(pixels[i], alpha)
 
-data = comm.gather(pixelLoc, root = 0)
-if rank == 0:
-	# save the image
-	res = []
-	for i in range (size):
-		res = res + data[i]
-	saveImage(res, nblines, nbcolumns)
-	print("Stretching done...")
+# save the image
+saveImage(pixels, nblines, nbcolumns)
+print("Stretching done...")
+
+
