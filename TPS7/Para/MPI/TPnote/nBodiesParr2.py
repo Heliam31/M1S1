@@ -1,6 +1,5 @@
-
 #version parallele
-#mpirun -n 3 python3 nBodiesParr.py 12 1000
+#mpirun -n 3 python3 nBodiesParr2.py 12 1000
 
 from mpi4py import MPI
 import sys
@@ -118,7 +117,6 @@ if rank == 0:
 
 debut = MPI.Wtime()
 world = init_world(nbbodies)
-
 if rank == 0:
     data = world
     ptg = split(data, size)
@@ -132,12 +130,13 @@ for i in range(NBSTEPS):
     dataTot = comm.bcast(data,root = 0)
 
     for id in range(len(dataLoc)):
-        for j in range(nbbodies):
+        for j in range(int(nbbodies/size)):
             [fx,fy] = force[id]
+            [gx,gy] = force[j]
             [dfx, dfy] = interaction(dataLoc[id], dataTot[j])
             force[id] = [fx + dfx, fy + dfy]
+            force[j] = [gx - dfx, gy - dfy]
         dataLoc[id] = update(dataLoc[id],force[id])
-
     datagat = comm.gather(dataLoc, root = 0)
     if rank == 0:
         data = unsplit(datagat)
