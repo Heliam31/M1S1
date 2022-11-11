@@ -1,0 +1,2 @@
+Notre V2 est limitée par le fait qu'avec plus de planètes et de processus
+les differentes communications de MPI ne rendront pas le code rentable niveau cout.
