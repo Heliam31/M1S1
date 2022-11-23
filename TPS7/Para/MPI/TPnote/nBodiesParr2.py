@@ -1,6 +1,5 @@
-
 #version parallele
-#mpirun -n 3 python3 nBodiesParr.py 12 1000
+#mpirun -n 3 python3 nBodiesParr2.py 12 1000
 
 from mpi4py import MPI
 import sys
@@ -118,7 +117,6 @@ if rank == 0:
 
 debut = MPI.Wtime()
 world = init_world(nbbodies)
-
 if rank == 0:
     data = world
     ptg = split(data, size)
@@ -130,14 +128,21 @@ dataLoc = comm.scatter(ptg, root = 0)
 for i in range(NBSTEPS):
     force = [[0,0] for _ in range(len(dataLoc))]
     dataTot = comm.bcast(data,root = 0)
-
+    minBody = rank * (nbbodies/size) -1
+    maxBody = minBody + len(dataLoc) -1
     for id in range(len(dataLoc)):
         for j in range(nbbodies):
+            if(j<minBody or j>maxBody):
+                [fx,fy] = force[id] 
+                [dfx, dfy] = interaction(dataLoc[id], dataTot[j])
+                force[id] = [fx + dfx, fy + dfy]
+        for j in range(id):
             [fx,fy] = force[id]
-            [dfx, dfy] = interaction(dataLoc[id], dataTot[j])
+            [gx,gy] = force[j]
+            [dfx, dfy] = interaction(dataLoc[id], dataLoc[j])
             force[id] = [fx + dfx, fy + dfy]
+            force[j] = [gx - dfx, gy - dfy]
         dataLoc[id] = update(dataLoc[id],force[id])
-
     datagat = comm.gather(dataLoc, root = 0)
     if rank == 0:
         data = unsplit(datagat)
