@@ -106,3 +106,5 @@ minimize objectif : sum<d> in Days : sum<s> in Services: (y[d,s] + z[d,s]);
 
 subto somEcart : forall<d> in Days : forall<s> in Services: 
     (sum<p> in Personnes: assigned[p, d, s]) - y[d,s] + z[d,s] == requirement[d,s];
+subto  servDay : forall<p> in Personnes: forall<d> in Days: (sum<s> in Services: assigned [p, d, s]) == 1;
+subto Vacances : forall<p> in Personnes: forall<d> in Days: IF dayOff[p,d] == 1 THEN (sum<s> in Services: assigned [p, d, s]) == 0;
