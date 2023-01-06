@@ -1,4 +1,4 @@
-param fichier := "u40_00.bpa" ;
+param fichier := "bin-packing-difficile-hard.bpa" ;
 
 param C := read fichier as "1n" skip 1 use 1;
 param Size := read fichier as "2n" skip 1 use 1;

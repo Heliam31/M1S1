@@ -1,4 +1,4 @@
-param fichier := "shift-scheduling-5.zplread" ;
+param fichier := "shift-scheduling.zplread" ;
 do print fichier ;
 #shift-scheduling_lecture-donnees.zpl
 
@@ -101,12 +101,10 @@ param prefOn[Personnes*Days*Services] :=
 var assigned[Personnes*Days*Services] binary ;
 var y[Days * Services] integer >= 0;
 var z[Days * Services] integer >= 0;
-var pen[Days * Services] integer >= 0;
 
-minimize objectif : sum<d> in Days : sum<s> in Services: (y[d,s] + z[d,s]+pen[d,s]);
+minimize objectif : sum<d> in Days : sum<s> in Services: (y[d,s] + z[d,s]);
 subto somEcart : forall<d> in Days : forall<s> in Services: 
     (sum<p> in Personnes: assigned[p, d, s]) - y[d,s] + z[d,s] == requirement[d,s];
-subto penalites : forall<d> in Days: forall<s> in Services: pen[d,s] == y[d,s] * aboveCoverPen[d,s] + z[d,s] * belowCoverPen[d,s] + (sum<p> in Personnes: assigned[p,d,s]*prefOff[p,d,s]) + (sum<p> in Personnes:(1-assigned[p,d,s])*prefOn[p,d,s]);
 subto  servDay : forall<p> in Personnes: forall<d> in Days: (sum<s> in Services: assigned [p, d, s]) <= 1;
 subto Vacances : forall<p> in Personnes: forall<d> in Days: forall<s> in Services: assigned[p,d,s] <= 1-dayOff[p,d];
 subto LimSh : forall<p> in Personnes: forall<s> in Services: (sum<d> in Days: assigned[p,d,s]) <= MaxShift[p,s];
@@ -114,4 +112,4 @@ subto MinDuree : forall<p> in Personnes: (sum<d> in Days: (sum<s> in Services: d
 subto MaxDuree : forall<p> in Personnes: (sum<d> in Days: (sum<s> in Services: duree[s]*assigned[p,d,s])) <= MaxTotalMinutes[p];
 subto JourConsMax: forall<p> in Personnes: forall<d> in Days with (d< horizon - MaxConsecutiveShifts[p]): forall<s> in Services: (sum<n> in {0..MaxConsecutiveShifts[p]}: assigned[p,d+n,s])<=MaxConsecutiveShifts[p];
 subto InterditSeq: forall<p> in Personnes: forall<s1> in Services: forall<s2> in Services: forall<d> in Days with (d<horizon-1): assigned[p,d,s1] + ForbiddenSeq[s1,s2] + assigned[p,d+1,s2] <= 2;
-subto JourConsOff: forall<p> in Personnes: forall <s> in Services: forall<d> in Days with (d<horizon - MinConsecutiveDaysOff[p]): assigned[p,d,s] + assigned[p,d+MinConsecutiveDaysOff[p],s] - (3-MinConsecutiveDaysOff[p]) <= (sum<i> in {d+1..d+MinConsecutiveDaysOff[p]-1}: assigned[p,i,s]);
+#subto JourConsOff: forall<p> in Personnes: forall <s> in Services: forall<d> in Days with (d<horizon - MinConsecutiveDaysOff[p]): assigned[p,d,s] + assigned[p,d+MinConsecutiveDaysOff[p],s] - (3-MinConsecutiveDaysOff[p]) <= (sum<i> in {d+1..d+MinConsecutiveDaysOff[p]-1}: assigned[p,i,s]);

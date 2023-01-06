@@ -119,4 +119,3 @@ def TabuSearch (X,Q):
                 bestSoFar = s
             nbMoves += 1
     return bestSoFar
-
